@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: central-server
+  profiles:
+    default: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
