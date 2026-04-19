@@ -1,15 +1,19 @@
 package com.ticketrush.centralserver;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+@SpringBootTest(
+	properties = "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
+)
 @ActiveProfiles("test")
 class CentralServerApplicationTests {
 
 	@Test
-	void contextLoads() {
+	@DisplayName("애플리케이션 컨텍스트가 정상적으로 로드된다")
+	void 애플리케이션_컨텍스트가_정상적으로_로드된다() {
 	}
 
 }
