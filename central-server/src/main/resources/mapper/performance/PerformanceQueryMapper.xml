@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ticketrush.centralserver.infrastructure.persistence.mapper.PerformanceQueryMapper">
+
+    <select id="findAll" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.PerformanceRow">
+        SELECT
+            id,
+            title,
+            venue,
+            total_seats
+        FROM performance
+        ORDER BY id DESC
+    </select>
+
+</mapper>
