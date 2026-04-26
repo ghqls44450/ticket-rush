@@ -9,4 +9,14 @@
         FROM DUAL
     </select>
 
+    <select id="findById" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.PerformanceRow">
+        SELECT
+        id,
+        title,
+        venue,
+        total_seats
+        FROM performance
+        WHERE id = #{performanceId}
+    </select>
+
 </mapper>
