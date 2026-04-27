@@ -3,6 +3,7 @@ package com.ticketrush.centralserver.interfaces.api.performance;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,4 +24,10 @@ public class PerformanceController {
 	public ApiResponse<List<PerformanceResponse>> getPerformances() {
 		return ApiResponse.success(performanceQueryService.getPerformances());
 	}
+
+	@GetMapping("/{performanceId}")
+	public ApiResponse<PerformanceResponse> getPerformance(@PathVariable Long performanceId) {
+		return ApiResponse.success(performanceQueryService.getPerformance(performanceId));
+	}
+
 }
