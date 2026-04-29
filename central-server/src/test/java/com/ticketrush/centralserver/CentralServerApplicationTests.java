@@ -7,6 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.ticketrush.centralserver.application.performance.PerformanceQueryService;
+import com.ticketrush.centralserver.application.schedule.ScheduleQueryService;
 
 @SpringBootTest(
 	properties = "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
@@ -16,6 +17,9 @@ class CentralServerApplicationTests {
 
 	@MockitoBean
 	private PerformanceQueryService performanceQueryService;
+
+	@MockitoBean
+	private ScheduleQueryService scheduleQueryService;
 
 	@Test
 	@DisplayName("애플리케이션 컨텍스트가 정상적으로 로드된다")

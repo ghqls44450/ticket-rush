@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ticketrush.centralserver.application.performance.PerformanceQueryService;
+import com.ticketrush.centralserver.application.schedule.ScheduleQueryService;
 import com.ticketrush.centralserver.interfaces.api.performance.dto.PerformanceResponse;
+import com.ticketrush.centralserver.interfaces.api.performance.dto.ScheduleResponse;
 import com.ticketrush.centralserver.support.response.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class PerformanceController {
 
 	private final PerformanceQueryService performanceQueryService;
+	private final ScheduleQueryService scheduleQueryService;
 
 	@GetMapping
 	public ApiResponse<List<PerformanceResponse>> getPerformances() {
@@ -28,6 +31,11 @@ public class PerformanceController {
 	@GetMapping("/{performanceId}")
 	public ApiResponse<PerformanceResponse> getPerformance(@PathVariable Long performanceId) {
 		return ApiResponse.success(performanceQueryService.getPerformance(performanceId));
+	}
+
+	@GetMapping("/{performanceId}/schedules")
+	public ApiResponse<List<ScheduleResponse>> getSchedules(@PathVariable Long performanceId) {
+		return ApiResponse.success(scheduleQueryService.getSchedules(performanceId));
 	}
 
 }

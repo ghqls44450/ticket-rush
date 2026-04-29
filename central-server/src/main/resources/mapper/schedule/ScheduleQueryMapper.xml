@@ -6,11 +6,11 @@
 
     <select id="findByPerformanceId" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.ScheduleRow">
         SELECT
-        id,
-        performance_id,
-        start_time,
-        end_time,
-        status
+            id,
+            performance_id,
+            start_time,
+            end_time,
+            status
         FROM schedule
         WHERE performance_id = #{performanceId}
         ORDER BY start_time ASC, id ASC
