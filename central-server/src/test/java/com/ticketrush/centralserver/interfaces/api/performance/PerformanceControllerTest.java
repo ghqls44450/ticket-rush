@@ -15,11 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Sql(statements = {
-	"DELETE FROM performance",
-	"ALTER TABLE performance AUTO_INCREMENT = 1",
-	"INSERT INTO performance (title, description, venue, total_seats) VALUES ('테스트 공연', '설명', '올림픽홀', 500)",
-	"INSERT INTO performance (title, description, venue, total_seats) VALUES ('두번째 공연', '설명', '체조경기장', 1000)"
+@Sql(scripts = {
+	"/sql/cleanup.sql",
+	"/sql/performance-controller-test-data.sql"
 })
 class PerformanceControllerTest {
 
@@ -60,6 +58,19 @@ class PerformanceControllerTest {
 			.andExpect(jsonPath("$.error.message").value("공연을 찾을 수 없습니다."));
 	}
 
-
+	@Test
+	@DisplayName("공연 회차 목록 조회 API가 정상 응답한다")
+	void 공연_회차_목록_조회_API가_정상_응답한다() throws Exception {
+		mockMvc.perform(get("/api/v1/performances/{performanceId}/schedules", 1L))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.length()").value(2))
+			.andExpect(jsonPath("$.data[0].performanceId").value(1))
+			.andExpect(jsonPath("$.data[0].startTime").value("2026-05-10T19:00:00"))
+			.andExpect(jsonPath("$.data[0].status").value("OPEN"))
+			.andExpect(jsonPath("$.data[1].performanceId").value(1))
+			.andExpect(jsonPath("$.data[1].startTime").value("2026-05-11T19:00:00"))
+			.andExpect(jsonPath("$.data[1].status").value("OPEN"));
+	}
 
 }
