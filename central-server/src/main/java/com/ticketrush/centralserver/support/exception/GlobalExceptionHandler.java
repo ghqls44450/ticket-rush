@@ -1,11 +1,13 @@
 package com.ticketrush.centralserver.support.exception;
 
-import com.ticketrush.centralserver.support.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import com.ticketrush.centralserver.support.response.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -27,9 +29,16 @@ public class GlobalExceptionHandler {
 			.body(ApiResponse.failure(ErrorCode.VALIDATION_ERROR, message));
 	}
 
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ApiResponse<Void>> handleTypeMismatchException(MethodArgumentTypeMismatchException e) {
+		return ResponseEntity.status(ErrorCode.VALIDATION_ERROR.status())
+			.body(ApiResponse.failure(ErrorCode.VALIDATION_ERROR));
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
 		return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.status())
 			.body(ApiResponse.failure(ErrorCode.INTERNAL_SERVER_ERROR));
 	}
+
 }
