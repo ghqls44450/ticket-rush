@@ -33,8 +33,7 @@ class ScheduleControllerTest {
 			.andExpect(jsonPath("$.data.length()").value(3))
 			.andExpect(jsonPath("$.data[0].seatNumber").value("A1"))
 			.andExpect(jsonPath("$.data[1].seatNumber").value("A2"))
-			.andExpect(jsonPath("$.data[2].seatNumber").value("A3"))
-		;
+			.andExpect(jsonPath("$.data[2].seatNumber").value("A3"));
 	}
 
 	@Test
@@ -45,8 +44,7 @@ class ScheduleControllerTest {
 			.andExpect(jsonPath("$.data.length()").value(1))
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data[0].seatNumber").value("A1"))
-			.andExpect(jsonPath("$.data[0].status").value("AVAILABLE"))
-		;
+			.andExpect(jsonPath("$.data[0].status").value("AVAILABLE"));
 	}
 
 	@Test
@@ -57,7 +55,38 @@ class ScheduleControllerTest {
 			.andExpect(jsonPath("$.data.length()").value(1))
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data[0].seatNumber").value("B1"))
-			.andExpect(jsonPath("$.data[0].status").value("AVAILABLE"))
-		;
+			.andExpect(jsonPath("$.data[0].status").value("AVAILABLE"));
 	}
+
+	@Test
+	@DisplayName("잘못된 scheduleId 타입 요청 시 공통 에러 응답을 반환한다")
+	void 잘못된_scheduleId_타입() throws Exception {
+		mockMvc.perform(get("/api/v1/schedules/abc/seats"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("COMMON_INVALID_INPUT"))
+			.andExpect(jsonPath("$.error.message").value("잘못된 요청입니다."));
+	}
+
+	@Test
+	@DisplayName("허용하지 않는 좌석 상태 요청 시 공통 에러 응답을 반환한다")
+	void 허용하지_않는_좌석_상태_요청() throws Exception {
+		mockMvc.perform(get("/api/v1/schedules/1/seats?status=INVALID"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("INVALID_SEAT_STATUS"))
+			.andExpect(jsonPath("$.error.message").value("허용하지 않는 좌석 상태입니다."));
+	}
+
+	@Test
+	@DisplayName("빈 좌석 상태 요청 시 공통 에러 응답을 반환한다")
+	void 빈_좌석_상태_요청() throws Exception {
+		mockMvc.perform(get("/api/v1/schedules/1/seats?status="))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("INVALID_SEAT_STATUS"))
+			.andExpect(jsonPath("$.error.message").value("허용하지 않는 좌석 상태입니다."));
+	}
+
+
 }
