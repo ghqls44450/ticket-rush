@@ -9,8 +9,12 @@ public enum SeatStatus {
 	;
 
 	public static boolean isValid(String value) {
-		if (value == null || value.isBlank()) {
+		if (value == null) {
 			return true;
+		}
+
+		if (value.isBlank()) {
+			return false;
 		}
 
 		for (SeatStatus status : values()) {
