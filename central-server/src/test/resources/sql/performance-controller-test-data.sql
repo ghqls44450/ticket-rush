@@ -1,3 +1,6 @@
+-- PerformanceControllerTest 전용 테스트 데이터
+-- 공연 목록/단건 조회와 공연별 회차 조회를 검증한다.
+
 INSERT INTO performance (title, description, venue, total_seats)
 VALUES ('테스트 공연', '설명', '올림픽홀', 500);
 
