@@ -8,6 +8,19 @@ public enum SeatStatus {
 	CANCELLED
 	;
 
+	public boolean canTransitionTo(SeatStatus nextStatus) {
+		if (nextStatus == null) {
+			return false;
+		}
+
+		return switch (this) {
+			case AVAILABLE -> nextStatus == HELD;
+			case HELD -> nextStatus == CONFIRMED || nextStatus == AVAILABLE;
+			case CONFIRMED -> nextStatus == CANCELLED;
+			case CANCELLED -> false;
+		};
+	}
+
 	public static boolean isValid(String value) {
 		if (value == null) {
 			return true;
