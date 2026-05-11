@@ -19,4 +19,22 @@
         ORDER BY seat_number ASC, id ASC
     </select>
 
+    <select id="findById" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow">
+        SELECT
+            id,
+            schedule_id,
+            seat_number,
+            status,
+            price
+        FROM seat
+        WHERE id = #{seatId}
+    </select>
+
+    <update id="holdSeat">
+        UPDATE seat
+            SET status = 'HELD',
+                held_at = CURRENT_TIMESTAMP
+        WHERE id = #{seatId}
+    </update>
+
 </mapper>
