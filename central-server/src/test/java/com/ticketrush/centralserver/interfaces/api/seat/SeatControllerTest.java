@@ -1,7 +1,14 @@
 package com.ticketrush.centralserver.interfaces.api.seat;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,5 +91,50 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.error.message").value("잘못된 요청입니다."));
 	}
 
+	@Test
+	@DisplayName("동일 좌석에 동시에 점유 요청이 들어오면 하나만 성공한다")
+	void 동일_좌석_동시_점유_요청_하나만_성공() throws Exception{
+
+		int threadCount = 10;
+
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+		CountDownLatch doneLatch = new CountDownLatch(threadCount);
+
+		AtomicInteger successCount = new AtomicInteger();
+		AtomicInteger failureCount = new AtomicInteger();
+
+		for (int i = 0; i < threadCount; i++) {
+			executorService.submit(() -> {
+				try {
+					startLatch.await();
+
+					int status = mockMvc.perform(post("/api/v1/seats/1/hold"))
+						.andReturn()
+						.getResponse()
+						.getStatus();
+
+					if (status == 200) {
+						successCount.incrementAndGet();
+					} else {
+						failureCount.incrementAndGet();
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				} finally {
+					doneLatch.countDown();
+				}
+			});
+		}
+		startLatch.countDown();
+
+		boolean finished = doneLatch.await(5, TimeUnit.SECONDS);
+
+		executorService.shutdown();
+
+		assertTrue(finished);
+		assertEquals(1, successCount.get());
+		assertEquals(9, failureCount.get());
+	}
 
 }

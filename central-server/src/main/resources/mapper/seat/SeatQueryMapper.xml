@@ -37,4 +37,16 @@
         WHERE id = #{seatId}
     </update>
 
+    <select id="findByIdForUpdate" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow">
+        SELECT
+            id,
+            schedule_id,
+            seat_number,
+            status,
+            price
+        FROM seat
+        WHERE id = #{seatId}
+        FOR UPDATE
+    </select>
+
 </mapper>

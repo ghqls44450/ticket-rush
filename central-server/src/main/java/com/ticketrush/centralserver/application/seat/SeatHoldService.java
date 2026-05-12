@@ -1,6 +1,7 @@
 package com.ticketrush.centralserver.application.seat;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
@@ -17,8 +18,9 @@ public class SeatHoldService {
 
 	private final SeatQueryMapper seatQueryMapper;
 
+	@Transactional
 	public SeatHoldResponse holdSeat(Long seatId) {
-		SeatRow seat = seatQueryMapper.findById(seatId)
+		SeatRow seat = seatQueryMapper.findByIdForUpdate(seatId)
 			.orElseThrow(() -> new ApiException(ErrorCode.SEAT_NOT_FOUND));
 
 		SeatStatus currentStatus = SeatStatus.valueOf(seat.status());
