@@ -5,7 +5,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
-import com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow;
 import com.ticketrush.centralserver.interfaces.api.seat.dto.SeatHoldResponse;
 import com.ticketrush.centralserver.support.exception.ApiException;
 import com.ticketrush.centralserver.support.exception.ErrorCode;
@@ -20,17 +19,16 @@ public class SeatHoldService {
 
 	@Transactional
 	public SeatHoldResponse holdSeat(Long seatId) {
-		SeatRow seat = seatQueryMapper.findByIdForUpdate(seatId)
-			.orElseThrow(() -> new ApiException(ErrorCode.SEAT_NOT_FOUND));
 
-		SeatStatus currentStatus = SeatStatus.valueOf(seat.status());
+		int updatedCount = seatQueryMapper.holdSeatIfAvailable(seatId);
 
-		if (!currentStatus.canTransitionTo(SeatStatus.HELD)) {
-			throw new ApiException(ErrorCode.SEAT_CANNOT_BE_HELD);
+		if (updatedCount == 1) {
+			return new SeatHoldResponse(seatId, SeatStatus.HELD.name());
 		}
 
-		seatQueryMapper.holdSeat(seatId);
+		seatQueryMapper.findById(seatId)
+			.orElseThrow(() -> new ApiException(ErrorCode.SEAT_NOT_FOUND));
 
-		return new SeatHoldResponse(seat.id(), SeatStatus.HELD.name());
+		throw new ApiException(ErrorCode.SEAT_CANNOT_BE_HELD);
 	}
 }
