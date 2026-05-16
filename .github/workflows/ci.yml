@@ -4,12 +4,26 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - ".github/workflows/ci.yml"
+      - "central-server/**"
+      - "docker-compose.yml"
+      - "infra/mysql/**"
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/ci.yml"
+      - "central-server/**"
+      - "docker-compose.yml"
+      - "infra/mysql/**"
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -25,14 +39,33 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
-          cache-dependency-path: |
-            central-server/*.gradle*
-            central-server/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
 
       - name: Ensure Gradle wrapper is executable
         working-directory: central-server
         run: chmod +x ./gradlew
+
+      - name: Restore MySQL image cache
+        id: mysql-image-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-image-cache/mysql-8.0.tar
+          key: mysql-image-8.0-${{ runner.os }}
+
+      - name: Load MySQL image cache
+        if: steps.mysql-image-cache.outputs.cache-hit == 'true'
+        run: docker load -i /tmp/docker-image-cache/mysql-8.0.tar
+
+      - name: Pull and save MySQL image
+        if: steps.mysql-image-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /tmp/docker-image-cache
+          docker pull mysql:8.0
+          docker save mysql:8.0 -o /tmp/docker-image-cache/mysql-8.0.tar
 
       - name: Start MySQL
         run: docker compose up -d mysql-master
@@ -52,4 +85,4 @@ jobs:
 
       - name: Run tests
         working-directory: central-server
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
