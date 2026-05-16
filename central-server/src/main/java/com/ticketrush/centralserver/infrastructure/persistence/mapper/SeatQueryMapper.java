@@ -19,4 +19,6 @@ public interface SeatQueryMapper {
 
 	Optional<SeatRow> findByIdForUpdate(@Param("seatId") Long seatId);
 
+	int holdSeatIfAvailable(@Param("seatId") Long seatId);
+
 }

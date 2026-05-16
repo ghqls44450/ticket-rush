@@ -49,4 +49,11 @@
         FOR UPDATE
     </select>
 
+    <update id="holdSeatIfAvailable">
+        UPDATE seat
+            SET status = 'HELD',
+                held_at = CURRENT_TIMESTAMP
+        WHERE id = #{seatId}
+          AND status = 'AVAILABLE'
+    </update>
 </mapper>
