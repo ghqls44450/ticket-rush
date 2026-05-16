@@ -1,5 +1,8 @@
 package com.ticketrush.centralserver.domain.seat;
 
+import com.ticketrush.centralserver.support.exception.ApiException;
+import com.ticketrush.centralserver.support.exception.ErrorCode;
+
 public enum SeatStatus {
 
 	AVAILABLE,
@@ -23,7 +26,7 @@ public enum SeatStatus {
 
 	public static boolean isValid(String value) {
 		if (value == null) {
-			return true;
+			return false;
 		}
 
 		if (value.isBlank()) {
@@ -37,6 +40,14 @@ public enum SeatStatus {
 		}
 
 		return false;
+	}
+
+	public static SeatStatus from(String value) {
+		if (!isValid(value)) {
+			throw new ApiException(ErrorCode.INVALID_SEAT_STATUS);
+		}
+
+		return valueOf(value);
 	}
 
 
