@@ -60,8 +60,17 @@
     <update id="confirmSeat">
         UPDATE seat
         SET status = 'CONFIRMED',
-        held_at = NULL
+            held_at = NULL
         WHERE id = #{seatId}
-        AND status = 'HELD'
+          AND status = 'HELD'
     </update>
+
+    <update id="releaseSeat">
+        UPDATE seat
+        SET status = 'AVAILABLE',
+            held_at = NULL
+        WHERE id = #{seatId}
+          AND status = 'HELD'
+    </update>
+
 </mapper>

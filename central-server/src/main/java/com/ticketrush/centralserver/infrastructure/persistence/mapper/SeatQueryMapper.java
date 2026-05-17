@@ -23,4 +23,6 @@ public interface SeatQueryMapper {
 
 	int confirmSeat(@Param("seatId") Long seatId);
 
+	int releaseSeat(@Param("seatId") Long seatId);
+
 }
