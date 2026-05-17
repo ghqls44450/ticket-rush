@@ -7,6 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.ticketrush.centralserver.application.performance.PerformanceQueryService;
+import com.ticketrush.centralserver.application.reservation.ReservationConfirmService;
 import com.ticketrush.centralserver.application.schedule.ScheduleQueryService;
 import com.ticketrush.centralserver.application.seat.SeatHoldService;
 import com.ticketrush.centralserver.application.seat.SeatQueryService;
@@ -28,6 +29,9 @@ class CentralServerApplicationTests {
 
 	@MockitoBean
 	private SeatHoldService seatHoldService;
+
+	@MockitoBean
+	private ReservationConfirmService reservationConfirmService;
 
 	@Test
 	@DisplayName("애플리케이션 컨텍스트가 정상적으로 로드된다")

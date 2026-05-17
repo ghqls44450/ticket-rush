@@ -21,4 +21,6 @@ public interface SeatQueryMapper {
 
 	int holdSeatIfAvailable(@Param("seatId") Long seatId);
 
+	int confirmSeat(@Param("seatId") Long seatId);
+
 }

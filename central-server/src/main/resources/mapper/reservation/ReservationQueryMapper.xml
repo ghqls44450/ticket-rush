@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ticketrush.centralserver.infrastructure.persistence.mapper.ReservationQueryMapper">
+
+    <insert id="insertReservation">
+        INSERT INTO reservation (
+            user_id,
+            seat_id,
+            status
+        )
+        VALUES (
+            #{userId},
+            #{seatId},
+            'CONFIRMED'
+        )
+    </insert>
+
+    <select id="findIdBySeatId" resultType="java.lang.Long">
+        SELECT id
+        FROM reservation
+        WHERE seat_id = #{seatId}
+        LIMIT 1
+    </select>
+
+</mapper>

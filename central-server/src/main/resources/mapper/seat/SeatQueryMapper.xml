@@ -56,4 +56,12 @@
         WHERE id = #{seatId}
           AND status = 'AVAILABLE'
     </update>
+
+    <update id="confirmSeat">
+        UPDATE seat
+        SET status = 'CONFIRMED',
+        held_at = NULL
+        WHERE id = #{seatId}
+        AND status = 'HELD'
+    </update>
 </mapper>
