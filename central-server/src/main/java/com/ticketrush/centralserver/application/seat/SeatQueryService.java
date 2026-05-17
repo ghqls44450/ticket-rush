@@ -21,7 +21,7 @@ public class SeatQueryService {
 
 	public List<SeatResponse> getSeats(Long scheduleId, String status) {
 
-		if (!SeatStatus.isValid(status)){
+		if (status != null && !SeatStatus.isValid(status)){
 			throw new ApiException(ErrorCode.INVALID_SEAT_STATUS);
 		}
 
