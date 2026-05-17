@@ -21,6 +21,7 @@
         SELECT id
         FROM reservation
         WHERE seat_id = #{seatId}
+        LIMIT 1
     </select>
 
 </mapper>

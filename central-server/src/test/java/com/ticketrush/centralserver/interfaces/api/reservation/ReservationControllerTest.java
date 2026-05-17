@@ -30,10 +30,10 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": 1,
-				  "seatId": 1
-				}
+					{
+					  "userId": 1,
+					  "seatId": 1
+					}
 				"""))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
@@ -51,11 +51,12 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": 1,
-				  "seatId": 4
-				}
+					{
+					  "userId": 1,
+					  "seatId": 4
+					}
 				"""))
+			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_NOT_FOUND"))
 			.andExpect(jsonPath("$.error.message").value("좌석을 찾을 수 없습니다."));
@@ -67,11 +68,12 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": 1,
-				  "seatId": 2
-				}
+					{
+					  "userId": 1,
+					  "seatId": 2
+					}
 				"""))
+			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_CONFIRMED"))
 			.andExpect(jsonPath("$.error.message").value("확정할 수 없는 좌석입니다."));
@@ -83,11 +85,12 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": 1,
-				  "seatId": 3
-				}
+					{
+					  "userId": 1,
+					  "seatId": 3
+					}
 				"""))
+			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_CONFIRMED"))
 			.andExpect(jsonPath("$.error.message").value("확정할 수 없는 좌석입니다."));
@@ -99,11 +102,12 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": null,
-				  "seatId": 1
-				}
+					{
+					  "userId": null,
+					  "seatId": 1
+					}
 				"""))
+			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("COMMON_INVALID_INPUT"))
 			.andExpect(jsonPath("$.error.message").value("must not be null"));
@@ -115,11 +119,12 @@ class ReservationControllerTest {
 		mockMvc.perform(post("/api/v1/reservations/confirm")
 				.contentType("application/json")
 				.content("""
-				{
-				  "userId": 1,
-				  "seatId": 0
-				}
+					{
+					  "userId": 1,
+					  "seatId": 0
+					}
 				"""))
+			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("COMMON_INVALID_INPUT"))
 			.andExpect(jsonPath("$.error.message").value("must be greater than 0"));

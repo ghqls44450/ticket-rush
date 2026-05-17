@@ -19,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class ReservationConfirmService {
 
+	private static final String CONFIRMED = "CONFIRMED";
+	private static final String PENDING = "PENDING";
+
 	private final SeatQueryMapper seatQueryMapper;
 	private final ReservationQueryMapper reservationQueryMapper;
 	private final PaymentQueryMapper paymentQueryMapper;
@@ -34,12 +37,19 @@ public class ReservationConfirmService {
 		if (!currentStatus.canTransitionTo(SeatStatus.CONFIRMED)) {
 			throw new ApiException(ErrorCode.SEAT_CANNOT_BE_CONFIRMED);
 		}
+		Integer amount = seat.price();
 
 		reservationQueryMapper.insertReservation(command);
 		Long reservationId = reservationQueryMapper.findIdBySeatId(command.seatId())
 			.orElseThrow(() -> new ApiException(ErrorCode.INTERNAL_SERVER_ERROR));
 
-		paymentQueryMapper.insertPayment(new PaymentCreateCommand(reservationId, seat.price(), "PENDING", null));
+		PaymentCreateCommand paymentCommand = new PaymentCreateCommand(
+			reservationId,
+			amount,
+			PENDING,
+			null
+		);
+		paymentQueryMapper.insertPayment(paymentCommand);
 		Long paymentId = paymentQueryMapper.findIdByReservationId(reservationId)
 			.orElseThrow(() -> new ApiException(ErrorCode.INTERNAL_SERVER_ERROR));
 
@@ -48,8 +58,15 @@ public class ReservationConfirmService {
 			throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
-		return new ReservationConfirmResponse(reservationId, paymentId, command.seatId(), command.userId(), "CONFIRMED", "PENDING",
-			seat.price());
+		return new ReservationConfirmResponse(
+			reservationId,
+			paymentId,
+			command.seatId(),
+			command.userId(),
+			CONFIRMED,
+			PENDING,
+			amount
+		);
 
 	}
 }
