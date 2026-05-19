@@ -1,5 +1,6 @@
 package com.ticketrush.centralserver.infrastructure.persistence.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,5 +25,7 @@ public interface SeatQueryMapper {
 	int confirmSeat(@Param("seatId") Long seatId);
 
 	int releaseSeat(@Param("seatId") Long seatId);
+
+	List<SeatRow> findExpiredHeldSeats(@Param("threshold") LocalDateTime threshold);
 
 }

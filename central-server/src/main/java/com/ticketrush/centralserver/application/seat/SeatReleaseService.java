@@ -1,5 +1,8 @@
 package com.ticketrush.centralserver.application.seat;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,25 @@ public class SeatReleaseService {
 		}
 
 		return new SeatReleaseResponse(seatId, AVAILABLE);
+	}
+
+	@Transactional
+	public int releaseExpiredSeats(LocalDateTime threshold) {
+
+		List<SeatRow> expiredSeats = seatQueryMapper.findExpiredHeldSeats(threshold);
+
+		int totalReleaseCount = 0;
+		for (SeatRow seat : expiredSeats) {
+			int releaseCount = seatQueryMapper.releaseSeat(seat.id());
+
+			if (releaseCount != 1) {
+				throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
+			}
+
+			totalReleaseCount += releaseCount;
+		}
+
+		return totalReleaseCount;
 	}
 
 }
