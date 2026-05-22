@@ -44,5 +44,20 @@ class SeatReleaseServiceTest {
 		assertEquals("HELD", recentSeat.status());
 	}
 
+	@Test
+	@DisplayName("만료된 좌석이 없으면 0건을 반환한다")
+	void 만료된_좌석이_없으면_0건을_반환한다() {
+		LocalDateTime threshold = LocalDateTime.of(2026, 5, 10, 18, 30, 0);
+
+		int releasedCount = seatReleaseService.releaseExpiredSeats(threshold);
+
+		SeatRow expiredCandidate = seatQueryMapper.findById(2L).orElseThrow();
+		SeatRow recentSeat = seatQueryMapper.findById(5L).orElseThrow();
+
+		assertEquals(0, releasedCount);
+		assertEquals("HELD", expiredCandidate.status());
+		assertEquals("HELD", recentSeat.status());
+	}
+
 
 }

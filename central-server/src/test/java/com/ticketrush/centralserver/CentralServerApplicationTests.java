@@ -11,6 +11,7 @@ import com.ticketrush.centralserver.application.reservation.ReservationConfirmSe
 import com.ticketrush.centralserver.application.schedule.ScheduleQueryService;
 import com.ticketrush.centralserver.application.seat.SeatHoldService;
 import com.ticketrush.centralserver.application.seat.SeatQueryService;
+import com.ticketrush.centralserver.application.seat.SeatReleaseService;
 
 @SpringBootTest(
 	properties = "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
@@ -32,6 +33,9 @@ class CentralServerApplicationTests {
 
 	@MockitoBean
 	private ReservationConfirmService reservationConfirmService;
+
+	@MockitoBean
+	private SeatReleaseService seatReleaseService;
 
 	@Test
 	@DisplayName("애플리케이션 컨텍스트가 정상적으로 로드된다")
