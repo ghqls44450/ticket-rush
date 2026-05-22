@@ -59,9 +59,31 @@
 
     <update id="confirmSeat">
         UPDATE seat
-        SET status = 'CONFIRMED',
-        held_at = NULL
+            SET status = 'CONFIRMED',
+                held_at = NULL
         WHERE id = #{seatId}
-        AND status = 'HELD'
+          AND status = 'HELD'
     </update>
+
+    <update id="releaseSeat">
+        UPDATE seat
+            SET status = 'AVAILABLE',
+                held_at = NULL
+        WHERE id = #{seatId}
+          AND status = 'HELD'
+    </update>
+
+    <select id="findExpiredHeldSeats" resultType="com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow">
+        SELECT
+            id,
+            schedule_id,
+            seat_number,
+            status,
+            price
+        FROM seat
+        WHERE status = 'HELD'
+          AND held_at <![CDATA[ < ]]> #{threshold}
+        ORDER BY held_at ASC, id ASC
+    </select>
+
 </mapper>

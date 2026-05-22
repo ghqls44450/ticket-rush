@@ -10,6 +10,7 @@ public enum ErrorCode {
 	SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "SEAT_NOT_FOUND", "좌석을 찾을 수 없습니다."),
 	SEAT_CANNOT_BE_HELD(HttpStatus.BAD_REQUEST, "SEAT_CANNOT_BE_HELD", "점유할 수 없는 좌석입니다."),
 	SEAT_CANNOT_BE_CONFIRMED(HttpStatus.BAD_REQUEST, "SEAT_CANNOT_BE_CONFIRMED", "확정할 수 없는 좌석입니다."),
+	SEAT_CANNOT_BE_RELEASED(HttpStatus.BAD_REQUEST, "SEAT_CANNOT_BE_RELEASED", "해제할 수 없는 좌석입니다."),
 
 	;
 

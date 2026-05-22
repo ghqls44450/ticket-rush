@@ -137,4 +137,54 @@ class SeatControllerTest {
 		assertEquals(9, failureCount.get());
 	}
 
+	@Test
+	@DisplayName("HELD 상태의 좌석을 AVAILABLE 상태로 해제할 수 있다")
+	void held_좌석_해제_성공() throws Exception{
+		mockMvc.perform(post("/api/v1/seats/2/release"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.seatId").value(2))
+			.andExpect(jsonPath("$.data.status").value("AVAILABLE"));
+	}
+
+	@Test
+	@DisplayName("AVAILABLE 상태의 좌석은 해제할 수 없다")
+	void available_좌석_해제_실패() throws Exception{
+		mockMvc.perform(post("/api/v1/seats/1/release"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
+			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+	}
+
+	@Test
+	@DisplayName("CONFIRMED 상태의 좌석은 해제할 수 없다")
+	void confirmed_좌석_해제_실패() throws Exception{
+		mockMvc.perform(post("/api/v1/seats/3/release"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
+			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+	}
+
+	@Test
+	@DisplayName("CANCELLED 상태의 좌석은 해제할 수 없다")
+	void cancelled_좌석_해제_실패() throws Exception{
+		mockMvc.perform(post("/api/v1/seats/4/release"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
+			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 좌석은 해제할 수 없다")
+	void 존재하지_않는_좌석_해제_실패() throws Exception{
+		mockMvc.perform(post("/api/v1/seats/9999/release"))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.success").value(false))
+			.andExpect(jsonPath("$.error.code").value("SEAT_NOT_FOUND"))
+			.andExpect(jsonPath("$.error.message").value("좌석을 찾을 수 없습니다."));
+	}
+
 }
