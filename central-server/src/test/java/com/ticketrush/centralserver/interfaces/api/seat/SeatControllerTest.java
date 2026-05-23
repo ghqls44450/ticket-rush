@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,6 +32,9 @@ class SeatControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
 	@Test
 	@DisplayName("AVAILABLE 상태의 좌석을 HELD 상태로 점유할 수 있다")
 	void available_좌석_점유_성공() throws Exception{
@@ -39,6 +43,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data.seatId").value(1))
 			.andExpect(jsonPath("$.data.status").value("HELD"));
+
+		assertEquals("HELD", seatStatus(1L));
 	}
 
 	@Test
@@ -49,6 +55,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_HELD"))
 			.andExpect(jsonPath("$.error.message").value("점유할 수 없는 좌석입니다."));
+
+		assertEquals("HELD", seatStatus(2L));
 	}
 
 	@Test
@@ -59,6 +67,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_HELD"))
 			.andExpect(jsonPath("$.error.message").value("점유할 수 없는 좌석입니다."));
+
+		assertEquals("CONFIRMED", seatStatus(3L));
 	}
 
 	@Test
@@ -69,6 +79,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_HELD"))
 			.andExpect(jsonPath("$.error.message").value("점유할 수 없는 좌석입니다."));
+
+		assertEquals("CANCELLED", seatStatus(4L));
 	}
 
 	@Test
@@ -145,6 +157,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data.seatId").value(2))
 			.andExpect(jsonPath("$.data.status").value("AVAILABLE"));
+
+		assertEquals("AVAILABLE", seatStatus(2L));
 	}
 
 	@Test
@@ -155,6 +169,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
 			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+
+		assertEquals("AVAILABLE", seatStatus(1L));
 	}
 
 	@Test
@@ -165,6 +181,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
 			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+
+		assertEquals("CONFIRMED", seatStatus(3L));
 	}
 
 	@Test
@@ -175,6 +193,8 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_RELEASED"))
 			.andExpect(jsonPath("$.error.message").value("해제할 수 없는 좌석입니다."));
+
+		assertEquals("CANCELLED", seatStatus(4L));
 	}
 
 	@Test
@@ -185,6 +205,14 @@ class SeatControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_NOT_FOUND"))
 			.andExpect(jsonPath("$.error.message").value("좌석을 찾을 수 없습니다."));
+	}
+
+	private String seatStatus(Long seatId) {
+		return jdbcTemplate.queryForObject(
+			"SELECT status FROM seat WHERE id = ?",
+			String.class,
+			seatId
+		);
 	}
 
 }
