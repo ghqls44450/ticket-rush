@@ -1,5 +1,6 @@
 package com.ticketrush.centralserver.interfaces.api.reservation;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +25,9 @@ class ReservationControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Test
 	@DisplayName("HELD 좌석을 예매하면 확정 성공한다")
@@ -43,6 +48,11 @@ class ReservationControllerTest {
 			.andExpect(jsonPath("$.data.reservationStatus").value("CONFIRMED"))
 			.andExpect(jsonPath("$.data.paymentStatus").value("PENDING"))
 			.andExpect(jsonPath("$.data.amount").value(50000));
+		assertEquals("CONFIRMED", seatStatus(1L));
+		assertEquals(1, reservationCount(1L));
+		assertEquals(1, paymentCount(1L));
+		assertEquals("CONFIRMED", reservationStatus(1L));
+		assertEquals("PENDING", paymentStatus(1L));
 	}
 
 	@Test
@@ -60,6 +70,9 @@ class ReservationControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_NOT_FOUND"))
 			.andExpect(jsonPath("$.error.message").value("좌석을 찾을 수 없습니다."));
+
+		assertEquals(0, reservationCount(4L));
+		assertEquals(0, paymentCount(4L));
 	}
 
 	@Test
@@ -77,6 +90,10 @@ class ReservationControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_CONFIRMED"))
 			.andExpect(jsonPath("$.error.message").value("확정할 수 없는 좌석입니다."));
+
+		assertEquals("AVAILABLE", seatStatus(2L));
+		assertEquals(0, reservationCount(2L));
+		assertEquals(0, paymentCount(2L));
 	}
 
 	@Test
@@ -94,6 +111,10 @@ class ReservationControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("SEAT_CANNOT_BE_CONFIRMED"))
 			.andExpect(jsonPath("$.error.message").value("확정할 수 없는 좌석입니다."));
+
+		assertEquals("CONFIRMED", seatStatus(3L));
+		assertEquals(0, reservationCount(3L));
+		assertEquals(0, paymentCount(3L));
 	}
 
 	@Test
@@ -128,6 +149,58 @@ class ReservationControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.error.code").value("COMMON_INVALID_INPUT"))
 			.andExpect(jsonPath("$.error.message").value("must be greater than 0"));
+	}
+
+	private String seatStatus(Long seatId) {
+		return jdbcTemplate.queryForObject(
+			"SELECT status FROM seat WHERE id = ?",
+			String.class,
+			seatId
+		);
+	}
+
+	private int reservationCount(Long seatId) {
+		Integer count = jdbcTemplate.queryForObject(
+			"SELECT COUNT(*) FROM reservation WHERE seat_id = ?",
+			Integer.class,
+			seatId
+		);
+		return count == null ? 0 : count;
+	}
+
+	private int paymentCount(Long seatId) {
+		Integer count = jdbcTemplate.queryForObject(
+			"""
+			SELECT COUNT(*)
+			FROM payment p
+			JOIN reservation r ON p.reservation_id = r.id
+			WHERE r.seat_id = ?
+			""",
+			Integer.class,
+			seatId
+		);
+		return count == null ? 0 : count;
+	}
+
+	private String reservationStatus(Long seatId) {
+		return jdbcTemplate.queryForObject(
+			"SELECT status FROM reservation WHERE seat_id = ?",
+			String.class,
+			seatId
+		);
+	}
+
+	private String paymentStatus(Long seatId) {
+		return jdbcTemplate.queryForObject(
+			"""
+			SELECT p.status
+			FROM payment p
+			JOIN reservation r ON p.reservation_id = r.id
+			WHERE r.seat_id = ?
+			""",
+			String.class,
+			seatId
+		);
 	}
 
 }
