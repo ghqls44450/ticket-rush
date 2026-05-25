@@ -7,6 +7,11 @@ public class RoutingDataSource extends AbstractRoutingDataSource {
 
 	@Override
 	protected Object determineCurrentLookupKey() {
+
+		if (RoutingDataSourceContext.isForceMaster()) {
+			return DataSourceType.MASTER;
+		}
+
 		boolean readOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
 
 		if (readOnly) {
