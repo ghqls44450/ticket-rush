@@ -3,6 +3,7 @@ package com.ticketrush.centralserver.application.performance;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.PerformanceQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.model.PerformanceRow;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class PerformanceQueryService {
 
 	private final PerformanceQueryMapper performanceQueryMapper;

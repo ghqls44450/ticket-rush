@@ -5,3 +5,22 @@ spring:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:13306}/${DB_NAME:ticket}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+app:
+  datasource:
+    master:
+      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:13306}/${DB_NAME:ticket}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:rootpassword}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave1:
+      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:13306}/${DB_NAME:ticket}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:rootpassword}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave2:
+      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:13306}/${DB_NAME:ticket}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:rootpassword}
+      driver-class-name: com.mysql.cj.jdbc.Driver
