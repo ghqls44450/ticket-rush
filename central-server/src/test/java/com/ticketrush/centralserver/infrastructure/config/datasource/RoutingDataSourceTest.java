@@ -18,6 +18,7 @@ class RoutingDataSourceTest {
 	@AfterEach
 	void tearDown() {
 		TransactionSynchronizationManager.clear();
+		RoutingDataSourceContext.clear();
 	}
 
 	@Test
@@ -48,4 +49,31 @@ class RoutingDataSourceTest {
 		assertEquals(DataSourceType.MASTER, lookupKey);
 	}
 
+	@Test
+	@DisplayName("master 강제 설정이 있으면 readOnly 트랜잭션도 master를 선택한다")
+	void master_강제_설정_readOnly_트랜잭션_master_선택() {
+		TestRoutingDataSource routingDataSource = new TestRoutingDataSource();
+
+		TransactionSynchronizationManager.setActualTransactionActive(true);
+		TransactionSynchronizationManager.setCurrentTransactionReadOnly(true);
+		RoutingDataSourceContext.forceMaster();
+
+		Object lookupKey = routingDataSource.currentLookupKey();
+		assertEquals(DataSourceType.MASTER, lookupKey);
+	}
+
+	@Test
+	@DisplayName("master 강제 설정을 해제하면 다시 기본 라우팅 규칙을 따른다")
+	void master_강제_설정_해제_다시_기본_라우팅_규칙() {
+		TestRoutingDataSource routingDataSource = new TestRoutingDataSource();
+
+		TransactionSynchronizationManager.setActualTransactionActive(true);
+		TransactionSynchronizationManager.setCurrentTransactionReadOnly(true);
+		RoutingDataSourceContext.forceMaster();
+		RoutingDataSourceContext.clear();
+
+		Object lookupKey = routingDataSource.currentLookupKey();
+
+		assertEquals(DataSourceType.SLAVE, lookupKey);
+	}
 }
