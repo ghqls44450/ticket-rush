@@ -3,6 +3,7 @@ package com.ticketrush.centralserver.application.seat;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class SeatQueryService {
 
 	private final SeatQueryMapper seatQueryMapper;

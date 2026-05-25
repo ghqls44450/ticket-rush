@@ -1,11 +1,15 @@
 package com.ticketrush.centralserver.infrastructure.config.datasource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class DataSourceConfig {
@@ -49,5 +53,20 @@ public class DataSourceConfig {
 			.build();
 	}
 
+	@Bean
+	@Primary
+	public DataSource routingDataSource() {
+		RoutingDataSource routingDataSource = new RoutingDataSource();
+
+		Map<Object, Object> targetDataSources = new HashMap<>();
+
+		targetDataSources.put(DataSourceType.MASTER, masterDataSource());
+		targetDataSources.put(DataSourceType.SLAVE, slave1DataSource());
+
+		routingDataSource.setTargetDataSources(targetDataSources);
+		routingDataSource.setDefaultTargetDataSource(masterDataSource());
+
+		return routingDataSource;
+	}
 
 }

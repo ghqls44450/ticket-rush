@@ -3,6 +3,7 @@ package com.ticketrush.centralserver.application.schedule;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.ScheduleQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.model.ScheduleRow;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class ScheduleQueryService {
 
 	private final ScheduleQueryMapper scheduleQueryMapper;
