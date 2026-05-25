@@ -67,6 +67,26 @@ services:
       timeout: 5s
       retries: 5
 
+  central-server:
+    build:
+      context: ./central-server
+    container_name: central-server
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+      DB_HOST: mysql-master
+      DB_PORT: 3306
+      DB_NAME: ticket
+      DB_USERNAME: root
+      DB_PASSWORD: rootpassword
+    ports:
+      - "18080:8080"
+    networks:
+      - ticket-network
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
