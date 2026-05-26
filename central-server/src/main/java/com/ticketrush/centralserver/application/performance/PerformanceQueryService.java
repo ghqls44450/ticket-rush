@@ -17,7 +17,9 @@ import com.ticketrush.centralserver.support.exception.ApiException;
 import com.ticketrush.centralserver.support.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -36,8 +38,11 @@ public class PerformanceQueryService {
 		Optional<String> cached = performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY);
 
 		if (cached.isPresent()) {
+			log.info("공연 목록 캐시 hit - key={}", PERFORMANCE_LIST_KEY);
 			return deserializePerformanceList(cached.get());
 		}
+
+		log.info("공연 목록 캐시 miss - key={}", PERFORMANCE_LIST_KEY);
 
 		List<PerformanceResponse> responses = performanceQueryMapper.findAll().stream()
 			.map(this::toResponse)
@@ -45,6 +50,8 @@ public class PerformanceQueryService {
 
 		String json = serializePerformanceList(responses);
 		performanceCacheRepository.setPerformanceList(PERFORMANCE_LIST_KEY, json, PERFORMANCE_LIST_TTL);
+
+		log.info("공연 목록 캐시 저장 - key={}, ttl={}s", PERFORMANCE_LIST_KEY, PERFORMANCE_LIST_TTL.getSeconds());
 
 		return responses;
 	}
