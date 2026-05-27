@@ -26,7 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class PerformanceQueryService {
 
 	private static final String PERFORMANCE_LIST_KEY = "performance:list:v1";
+	private static final String PERFORMANCE_LIST_LOCK_KEY = "performance:list:v1:lock";
 	private static final Duration PERFORMANCE_LIST_TTL = Duration.ofSeconds(60);
+	private static final Duration PERFORMANCE_LIST_LOCK_TTL = Duration.ofSeconds(60);
 
 	private final ObjectMapper objectMapper;
 
@@ -42,18 +44,29 @@ public class PerformanceQueryService {
 			return deserializePerformanceList(cached.get());
 		}
 
+		boolean locked = performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);
+
+		if (!locked) {
+			return handleLockMiss();
+		}
+
 		log.info("공연 목록 캐시 miss - key={}", PERFORMANCE_LIST_KEY);
 
-		List<PerformanceResponse> responses = performanceQueryMapper.findAll().stream()
-			.map(this::toResponse)
-			.toList();
+		try {
+			List<PerformanceResponse> responses = performanceQueryMapper.findAll().stream()
+				.map(this::toResponse)
+				.toList();
 
-		String json = serializePerformanceList(responses);
-		performanceCacheRepository.setPerformanceList(PERFORMANCE_LIST_KEY, json, PERFORMANCE_LIST_TTL);
+			String json = serializePerformanceList(responses);
+			performanceCacheRepository.setPerformanceList(PERFORMANCE_LIST_KEY, json, PERFORMANCE_LIST_TTL);
 
-		log.info("공연 목록 캐시 저장 - key={}, ttl={}s", PERFORMANCE_LIST_KEY, PERFORMANCE_LIST_TTL.getSeconds());
+			log.info("공연 목록 캐시 저장 - key={}, ttl={}s", PERFORMANCE_LIST_KEY, PERFORMANCE_LIST_TTL.getSeconds());
 
-		return responses;
+			return responses;
+		}finally {
+			performanceCacheRepository.releaseLock(PERFORMANCE_LIST_LOCK_KEY);
+		}
+
 	}
 
 	public PerformanceResponse getPerformance(Long performanceId) {
@@ -90,4 +103,18 @@ public class PerformanceQueryService {
 		}
 	}
 
+	private List<PerformanceResponse> handleLockMiss() {
+		Optional<String> cached = performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY);
+
+		if (cached.isPresent()) {
+			log.info("공연 목록 캐시 재조회 hit - key={}", PERFORMANCE_LIST_KEY);
+			return deserializePerformanceList(cached.get());
+		}
+
+		log.info("공연 목록 캐시 재조회 miss - key={}", PERFORMANCE_LIST_KEY);
+
+		return performanceQueryMapper.findAll().stream()
+			.map(this::toResponse)
+			.toList();
+	}
 }

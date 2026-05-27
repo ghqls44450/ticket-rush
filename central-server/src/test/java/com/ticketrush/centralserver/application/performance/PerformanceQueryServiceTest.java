@@ -24,6 +24,7 @@ import com.ticketrush.centralserver.interfaces.api.performance.dto.PerformanceRe
 class PerformanceQueryServiceTest {
 
 	private static final String PERFORMANCE_LIST_KEY = "performance:list:v1";
+	private static final String PERFORMANCE_LIST_LOCK_KEY = "performance:list:v1:lock";
 
 	@Mock
 	private PerformanceCacheRepository performanceCacheRepository;
@@ -56,6 +57,8 @@ class PerformanceQueryServiceTest {
 			.thenReturn(Optional.empty());
 		when(performanceQueryMapper.findAll())
 			.thenReturn(rows);
+		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60)))
+			.thenReturn(true);
 
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
 
@@ -76,6 +79,10 @@ class PerformanceQueryServiceTest {
 			.findAll();
 		verify(performanceCacheRepository, times(1))
 			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(Duration.ofSeconds(60)));
+		verify(performanceCacheRepository, times(1))
+			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60));
+		verify(performanceCacheRepository, times(1))
+			.releaseLock(PERFORMANCE_LIST_LOCK_KEY);
 
 	}
 
