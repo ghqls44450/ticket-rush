@@ -25,6 +25,25 @@ class PerformanceQueryServiceTest {
 
 	private static final String PERFORMANCE_LIST_KEY = "performance:list:v1";
 	private static final String PERFORMANCE_LIST_LOCK_KEY = "performance:list:v1:lock";
+	private static final Duration PERFORMANCE_LIST_TTL = Duration.ofSeconds(60);
+	private static final Duration PERFORMANCE_LIST_LOCK_TTL = Duration.ofSeconds(60);
+
+	private static final String CACHED_PERFORMANCES_JSON = """
+		[
+		  {
+			"id": 1,
+			"title": "공연 A",
+			"venue": "올림픽홀",
+			"totalSeats": 500
+		  },
+		  {
+			"id": 2,
+			"title": "공연 B",
+			"venue": "세종문화회관",
+			"totalSeats": 300
+		  }
+		]
+		""";
 
 	@Mock
 	private PerformanceCacheRepository performanceCacheRepository;
@@ -32,7 +51,7 @@ class PerformanceQueryServiceTest {
 	@Mock
 	private PerformanceQueryMapper performanceQueryMapper;
 
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	private PerformanceQueryService performanceQueryService;
 
@@ -48,39 +67,26 @@ class PerformanceQueryServiceTest {
 	@Test
 	@DisplayName("캐시 미스 시 DB에서 공연 목록을 조회하고 캐시에 저장한다")
 	void 캐시_미스_시_DB_조회_후_캐시에_저장한다() {
-		List<PerformanceRow> rows = List.of(
-			new PerformanceRow(1L, "공연 A", "올림픽홀", 500),
-			new PerformanceRow(2L, "공연 B", "세종문화회관", 300)
-		);
+		List<PerformanceRow> rows = createPerformanceRows();
 
 		when(performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY))
 			.thenReturn(Optional.empty());
 		when(performanceQueryMapper.findAll())
 			.thenReturn(rows);
-		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60)))
+		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL))
 			.thenReturn(true);
 
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
-
-		assertEquals(2, result.size());
-		assertEquals(1L, result.get(0).id());
-		assertEquals("공연 A", result.get(0).title());
-		assertEquals("올림픽홀", result.get(0).venue());
-		assertEquals(500, result.get(0).totalSeats());
-
-		assertEquals(2L, result.get(1).id());
-		assertEquals("공연 B", result.get(1).title());
-		assertEquals("세종문화회관", result.get(1).venue());
-		assertEquals(300, result.get(1).totalSeats());
+		assertPerformanceList(result);
 
 		verify(performanceCacheRepository, times(1))
 			.getPerformanceList(PERFORMANCE_LIST_KEY);
 		verify(performanceQueryMapper, times(1))
 			.findAll();
 		verify(performanceCacheRepository, times(1))
-			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(Duration.ofSeconds(60)));
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
 		verify(performanceCacheRepository, times(1))
-			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60));
+			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);
 		verify(performanceCacheRepository, times(1))
 			.releaseLock(PERFORMANCE_LIST_LOCK_KEY);
 
@@ -90,114 +96,77 @@ class PerformanceQueryServiceTest {
 	@DisplayName("캐시 히트 시 Redis 값을 반환하고 DB를 조회하지 않는다")
 	void 캐시_히트_시_캐시값을_반환하고_DB를_조회하지_않는다() {
 
-		String cachedJson = """
-		[
-		  {
-			"id": 1,
-			"title": "공연 A",
-			"venue": "올림픽홀",
-			"totalSeats": 500
-		  },
-		  {
-			"id": 2,
-			"title": "공연 B",
-			"venue": "세종문화회관",
-			"totalSeats": 300
-		  }
-		]
-		""";
-
 		when(performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY))
-			.thenReturn(Optional.of(cachedJson));
+			.thenReturn(Optional.of(CACHED_PERFORMANCES_JSON));
 
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
-
-		assertEquals(2, result.size());
-		assertEquals(1L, result.get(0).id());
-		assertEquals("공연 A", result.get(0).title());
-		assertEquals("올림픽홀", result.get(0).venue());
-		assertEquals(500, result.get(0).totalSeats());
-
-		assertEquals(2L, result.get(1).id());
-		assertEquals("공연 B", result.get(1).title());
-		assertEquals("세종문화회관", result.get(1).venue());
-		assertEquals(300, result.get(1).totalSeats());
+		assertPerformanceList(result);
 
 		verify(performanceCacheRepository, times(1))
 			.getPerformanceList(PERFORMANCE_LIST_KEY);
-		verify(performanceQueryMapper, times(0))
+		verify(performanceQueryMapper, never())
 			.findAll();
-		verify(performanceCacheRepository, times(0))
-			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(Duration.ofSeconds(60)));
+		verify(performanceCacheRepository, never())
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
 	}
 
 	@Test
 	@DisplayName("락 획득 실패 후 캐시 재조회 히트면 캐시 값을 반환한다")
 	void 락_획득_실패_후_캐시_재조회_히트면_캐시값을_반환한다(){
 
-		String cachedJson = """
-		[
-		  {
-			"id": 1,
-			"title": "공연 A",
-			"venue": "올림픽홀",
-			"totalSeats": 500
-		  },
-		  {
-			"id": 2,
-			"title": "공연 B",
-			"venue": "세종문화회관",
-			"totalSeats": 300
-		  }
-		]
-		""";
-
 		when(performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY))
-			.thenReturn(Optional.empty(), Optional.of(cachedJson));
-		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60)))
+			.thenReturn(Optional.empty(), Optional.of(CACHED_PERFORMANCES_JSON));
+		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL))
 			.thenReturn(false);
 
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
-		assertEquals(2, result.size());
-		assertEquals(1L, result.get(0).id());
-		assertEquals("공연 A", result.get(0).title());
-		assertEquals("올림픽홀", result.get(0).venue());
-		assertEquals(500, result.get(0).totalSeats());
-
-		assertEquals(2L, result.get(1).id());
-		assertEquals("공연 B", result.get(1).title());
-		assertEquals("세종문화회관", result.get(1).venue());
-		assertEquals(300, result.get(1).totalSeats());
+		assertPerformanceList(result);
 
 		verify(performanceCacheRepository, times(2))
 			.getPerformanceList(PERFORMANCE_LIST_KEY);
 		verify(performanceCacheRepository, times(1))
-			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60));
-		verify(performanceQueryMapper, times(0))
+			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);
+		verify(performanceQueryMapper, never())
 			.findAll();
-		verify(performanceCacheRepository, times(0))
-			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(Duration.ofSeconds(60)));
+		verify(performanceCacheRepository, never())
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
 	}
 
 	@Test
 	@DisplayName("락 획득 실패 후 캐시 재조회 미스면 DB를 조회한다")
 	void 락_획득_실패_후_캐시_재조회_미스면_DB를_조회한다() {
-		List<PerformanceRow> rows = List.of(
-			new PerformanceRow(1L, "공연 A", "올림픽홀", 500),
-			new PerformanceRow(2L, "공연 B", "세종문화회관", 300)
-		);
+		List<PerformanceRow> rows = createPerformanceRows();
 
 		when(performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY))
 			.thenReturn(Optional.empty(), Optional.empty());
 
-		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60)))
+		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL))
 			.thenReturn(false);
 
 		when(performanceQueryMapper.findAll())
 			.thenReturn(rows);
 
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
+		assertPerformanceList(result);
 
+		verify(performanceCacheRepository, times(2))
+			.getPerformanceList(PERFORMANCE_LIST_KEY);
+		verify(performanceCacheRepository, times(1))
+			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);
+		verify(performanceQueryMapper, times(1))
+			.findAll();
+		verify(performanceCacheRepository, never())
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
+	}
+
+	private List<PerformanceRow> createPerformanceRows() {
+		return List.of(
+			new PerformanceRow(1L, "공연 A", "올림픽홀", 500),
+			new PerformanceRow(2L, "공연 B", "세종문화회관", 300)
+		);
+	}
+
+	private void assertPerformanceList(List<PerformanceResponse> result) {
 		assertEquals(2, result.size());
 		assertEquals(1L, result.get(0).id());
 		assertEquals("공연 A", result.get(0).title());
@@ -208,15 +177,6 @@ class PerformanceQueryServiceTest {
 		assertEquals("공연 B", result.get(1).title());
 		assertEquals("세종문화회관", result.get(1).venue());
 		assertEquals(300, result.get(1).totalSeats());
-
-		verify(performanceCacheRepository, times(2))
-			.getPerformanceList(PERFORMANCE_LIST_KEY);
-		verify(performanceCacheRepository, times(1))
-			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, Duration.ofSeconds(60));
-		verify(performanceQueryMapper, times(1))
-			.findAll();
-		verify(performanceCacheRepository, times(0))
-			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(Duration.ofSeconds(60)));
 	}
 
 }
