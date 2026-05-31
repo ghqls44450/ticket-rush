@@ -156,7 +156,7 @@ class PerformanceQueryServiceTest {
 		List<PerformanceResponse> result = performanceQueryService.getPerformances();
 		assertPerformanceList(result);
 
-		verify(performanceCacheRepository, times(2))
+		verify(performanceCacheRepository, times(4))
 			.getPerformanceList(PERFORMANCE_LIST_KEY);
 		verify(performanceCacheRepository, times(1))
 			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);

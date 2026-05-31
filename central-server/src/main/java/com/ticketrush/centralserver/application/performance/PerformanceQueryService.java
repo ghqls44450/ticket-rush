@@ -91,7 +91,7 @@ public class PerformanceQueryService {
 		try {
 			return objectMapper.writeValueAsString(responses);
 		} catch (Exception e) {
-			throw new IllegalStateException("공연 목록 캐시 직렬화에 실패했습니다.", e);
+			throw new ApiException(ErrorCode.CACHE_SERIALIZATION_FAILED);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class PerformanceQueryService {
 				new TypeReference<List<PerformanceResponse>>() {}
 			);
 		} catch (Exception e) {
-			throw new IllegalStateException("공연 목록 캐시 역직렬화에 실패했습니다.", e);
+			throw new ApiException(ErrorCode.CACHE_DESERIALIZATION_FAILED);
 		}
 	}
 
@@ -113,15 +113,15 @@ public class PerformanceQueryService {
 				Thread.sleep(LOCK_MISS_WAIT_MILLIS);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
-				throw new IllegalStateException("캐시 재조회 대기 중 인터럽트가 발생했습니다.", e);
+				throw new ApiException(ErrorCode.CACHE_RECHECK_INTERRUPTED);
 			}
-		}
 
-		Optional<String> cached = performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY);
+			Optional<String> cached = performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY);
 
-		if (cached.isPresent()) {
-			log.info("공연 목록 캐시 재조회 hit - key={}", PERFORMANCE_LIST_KEY);
-			return deserializePerformanceList(cached.get());
+			if (cached.isPresent()) {
+				log.info("공연 목록 캐시 재조회 hit - key={}, retry={}", PERFORMANCE_LIST_KEY, i + 1);
+				return deserializePerformanceList(cached.get());
+			}
 		}
 
 		log.info("공연 목록 캐시 재조회 miss - key={}", PERFORMANCE_LIST_KEY);
