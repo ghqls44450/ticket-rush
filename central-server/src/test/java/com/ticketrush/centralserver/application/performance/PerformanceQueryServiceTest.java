@@ -4,8 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -157,6 +164,79 @@ class PerformanceQueryServiceTest {
 			.findAll();
 		verify(performanceCacheRepository, never())
 			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
+	}
+
+	@Test
+	@DisplayName("동일한 캐시 키 재생성 요청이 동시에 들어오면 하나의 요청만 재생성을 담당한다")
+	void 동일한_캐시_키_재생성_요청이_동시에_들어오면_하나의_요청만_재생성을_담당한다() throws Exception {
+
+		int threadCount = 5;
+
+		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+		CountDownLatch startLatch = new CountDownLatch(1);
+		CountDownLatch doneLatch = new CountDownLatch(threadCount);
+
+		AtomicBoolean cacheFilled = new AtomicBoolean(false);
+		AtomicBoolean lockTaken = new AtomicBoolean(false);
+
+		List<PerformanceRow> rows = createPerformanceRows();
+		when(performanceQueryMapper.findAll()).thenReturn(rows);
+
+		when(performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY))
+			.thenAnswer(invocation -> {
+				if (cacheFilled.get()) {
+					return Optional.of(CACHED_PERFORMANCES_JSON);
+				}
+				return Optional.empty();
+			});
+
+		when(performanceCacheRepository.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL))
+			.thenAnswer(invocation -> lockTaken.compareAndSet(false, true));
+
+		doAnswer(invocation -> {
+			cacheFilled.set(true);
+			return null;
+		}).when(performanceCacheRepository)
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
+
+		List<List<PerformanceResponse>> results = Collections.synchronizedList(new ArrayList<>());
+		List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
+
+		for (int i = 0; i < threadCount; i++) {
+			executorService.submit(() -> {
+					try {
+						startLatch.await();
+						List<PerformanceResponse> result = performanceQueryService.getPerformances();
+						results.add(result);
+					} catch (Throwable t) {
+						errors.add(t);
+					} finally {
+						doneLatch.countDown();
+					}
+			});
+		}
+
+		startLatch.countDown();
+		boolean finished = doneLatch.await(5, TimeUnit.SECONDS);
+		executorService.shutdown();
+
+		for (List<PerformanceResponse> result : results) {
+			assertPerformanceList(result);
+		}
+
+		assertTrue(finished);
+		assertTrue(errors.isEmpty());
+		assertEquals(threadCount, results.size());
+		verify(performanceCacheRepository, atLeast(threadCount))
+			.getPerformanceList(PERFORMANCE_LIST_KEY);
+		verify(performanceCacheRepository, times(threadCount))
+			.acquireLock(PERFORMANCE_LIST_LOCK_KEY, PERFORMANCE_LIST_LOCK_TTL);
+		verify(performanceQueryMapper, times(1))
+			.findAll();
+		verify(performanceCacheRepository, times(1))
+			.setPerformanceList(eq(PERFORMANCE_LIST_KEY), any(String.class), eq(PERFORMANCE_LIST_TTL));
+		verify(performanceCacheRepository, times(1))
+			.releaseLock(PERFORMANCE_LIST_LOCK_KEY);
 	}
 
 	private List<PerformanceRow> createPerformanceRows() {

@@ -30,6 +30,9 @@ public class PerformanceQueryService {
 	private static final Duration PERFORMANCE_LIST_TTL = Duration.ofSeconds(60);
 	private static final Duration PERFORMANCE_LIST_LOCK_TTL = Duration.ofSeconds(60);
 
+	private static final int LOCK_MISS_RETRY_COUNT = 3;
+	private static final long LOCK_MISS_WAIT_MILLIS = 50L;
+
 	private final ObjectMapper objectMapper;
 
 	private final PerformanceCacheRepository performanceCacheRepository;
@@ -104,6 +107,16 @@ public class PerformanceQueryService {
 	}
 
 	private List<PerformanceResponse> handleLockMiss() {
+
+		for (int i = 0; i < LOCK_MISS_RETRY_COUNT; i++) {
+			try {
+				Thread.sleep(LOCK_MISS_WAIT_MILLIS);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("캐시 재조회 대기 중 인터럽트가 발생했습니다.", e);
+			}
+		}
+
 		Optional<String> cached = performanceCacheRepository.getPerformanceList(PERFORMANCE_LIST_KEY);
 
 		if (cached.isPresent()) {
