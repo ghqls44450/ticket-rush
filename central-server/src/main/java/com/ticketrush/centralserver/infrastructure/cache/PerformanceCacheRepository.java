@@ -22,4 +22,13 @@ public class PerformanceCacheRepository {
 		redisTemplate.opsForValue().set(key, value, ttl);
 	}
 
+	public boolean acquireLock(String key, Duration ttl) {
+		Boolean result = redisTemplate.opsForValue().setIfAbsent(key, "locked", ttl);
+		return Boolean.TRUE.equals(result);
+	}
+
+	public void releaseLock(String key) {
+		redisTemplate.delete(key);
+	}
+
 }
