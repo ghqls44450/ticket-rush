@@ -19,6 +19,10 @@ public class SeatHoldCacheRepository {
 		redisTemplate.opsForValue().set(key(seatId), "HELD", ttl);
 	}
 
+	public void deleteHold(Long seatId) {
+		redisTemplate.delete(key(seatId));
+	}
+
 	private String key(Long seatId) {
 		return SEAT_HOLD_KEY_PREFIX + seatId;
 	}

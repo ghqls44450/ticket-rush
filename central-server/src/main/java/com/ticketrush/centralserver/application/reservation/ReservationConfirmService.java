@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.application.payment.PaymentCreateCommand;
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
+import com.ticketrush.centralserver.infrastructure.cache.SeatHoldCacheRepository;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.PaymentQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.ReservationQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
@@ -25,6 +26,7 @@ public class ReservationConfirmService {
 	private final SeatQueryMapper seatQueryMapper;
 	private final ReservationQueryMapper reservationQueryMapper;
 	private final PaymentQueryMapper paymentQueryMapper;
+	private final SeatHoldCacheRepository seatHoldCacheRepository;
 
 	@Transactional
 	public ReservationConfirmResponse confirmReservation(ReservationConfirmCommand command) {
@@ -57,6 +59,8 @@ public class ReservationConfirmService {
 		if (confirmCount != 1) {
 			throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+
+		seatHoldCacheRepository.deleteHold(seat.id());
 
 		return new ReservationConfirmResponse(
 			reservationId,

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
+import com.ticketrush.centralserver.infrastructure.cache.SeatHoldCacheRepository;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow;
 import com.ticketrush.centralserver.interfaces.api.seat.dto.SeatReleaseResponse;
@@ -22,6 +23,7 @@ public class SeatReleaseService {
 	private static final String AVAILABLE = "AVAILABLE";
 
 	private final SeatQueryMapper seatQueryMapper;
+	private final SeatHoldCacheRepository seatHoldCacheRepository;
 
 	@Transactional
 	public SeatReleaseResponse releaseSeat(SeatReleaseCommand command) {
@@ -43,6 +45,8 @@ public class SeatReleaseService {
 			throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
+		seatHoldCacheRepository.deleteHold(seatId);
+
 		return new SeatReleaseResponse(seatId, AVAILABLE);
 	}
 
@@ -58,6 +62,8 @@ public class SeatReleaseService {
 			if (releaseCount != 1) {
 				throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
 			}
+
+			seatHoldCacheRepository.deleteHold(seat.id());
 
 			totalReleaseCount += releaseCount;
 		}
