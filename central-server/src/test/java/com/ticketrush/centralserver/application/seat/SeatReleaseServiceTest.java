@@ -1,6 +1,7 @@
 package com.ticketrush.centralserver.application.seat;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 
@@ -9,8 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
+import com.ticketrush.centralserver.infrastructure.cache.SeatHoldCacheRepository;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.model.SeatRow;
 
@@ -28,6 +31,9 @@ class SeatReleaseServiceTest {
 	@Autowired
 	private SeatQueryMapper seatQueryMapper;
 
+	@MockitoBean
+	private SeatHoldCacheRepository seatHoldCacheRepository;
+
 
 	@Test
 	@DisplayName("만료된 좌석을 복구할 수 있다")
@@ -42,6 +48,9 @@ class SeatReleaseServiceTest {
 		assertEquals(1, releasedCount);
 		assertEquals("AVAILABLE", expiredSeat.status());
 		assertEquals("HELD", recentSeat.status());
+
+		verify(seatHoldCacheRepository, times(1))
+			.deleteHold(2L);
 	}
 
 	@Test
@@ -57,6 +66,8 @@ class SeatReleaseServiceTest {
 		assertEquals(0, releasedCount);
 		assertEquals("HELD", expiredCandidate.status());
 		assertEquals("HELD", recentSeat.status());
+		verify(seatHoldCacheRepository, never())
+			.deleteHold(anyLong());
 	}
 
 

@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketrush.centralserver.application.payment.PaymentCreateCommand;
 import com.ticketrush.centralserver.domain.seat.SeatStatus;
+import com.ticketrush.centralserver.infrastructure.cache.SeatHoldCacheRepository;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.PaymentQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.ReservationQueryMapper;
 import com.ticketrush.centralserver.infrastructure.persistence.mapper.SeatQueryMapper;
@@ -14,7 +15,9 @@ import com.ticketrush.centralserver.support.exception.ApiException;
 import com.ticketrush.centralserver.support.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReservationConfirmService {
@@ -25,6 +28,7 @@ public class ReservationConfirmService {
 	private final SeatQueryMapper seatQueryMapper;
 	private final ReservationQueryMapper reservationQueryMapper;
 	private final PaymentQueryMapper paymentQueryMapper;
+	private final SeatHoldCacheRepository seatHoldCacheRepository;
 
 	@Transactional
 	public ReservationConfirmResponse confirmReservation(ReservationConfirmCommand command) {
@@ -56,6 +60,12 @@ public class ReservationConfirmService {
 		int confirmCount = seatQueryMapper.confirmSeat(seat.id());
 		if (confirmCount != 1) {
 			throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+
+		try {
+			seatHoldCacheRepository.deleteHold(seat.id());
+		} catch (Exception e) {
+			log.warn("Redis hold key 삭제 실패. seatId={}", seat.id(), e);
 		}
 
 		return new ReservationConfirmResponse(
