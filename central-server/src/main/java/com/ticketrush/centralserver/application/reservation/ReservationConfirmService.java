@@ -15,7 +15,9 @@ import com.ticketrush.centralserver.support.exception.ApiException;
 import com.ticketrush.centralserver.support.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReservationConfirmService {
@@ -60,7 +62,11 @@ public class ReservationConfirmService {
 			throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 
-		seatHoldCacheRepository.deleteHold(seat.id());
+		try {
+			seatHoldCacheRepository.deleteHold(seat.id());
+		} catch (Exception e) {
+			log.warn("Redis hold key 삭제 실패. seatId={}", seat.id(), e);
+		}
 
 		return new ReservationConfirmResponse(
 			reservationId,
