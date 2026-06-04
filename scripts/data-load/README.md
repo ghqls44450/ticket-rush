@@ -32,6 +32,16 @@
 
 ## 예정 파일
 
-- `generate-seat-data.*`: 좌석 데이터 생성
+- `generate-seat-data.sh`: 좌석 데이터 생성
 - `load-seat-data.*`: 좌석 데이터 적재
 - `queries/*`: EXPLAIN 및 측정용 쿼리
+
+## 생성 스크립트
+
+`generate-seat-data.sh`는 좌석 더미 데이터를 CSV로 생성한다. 세부 실행 방법과 인자 예시는 스크립트 파일 상단 주석을 기준으로 확인한다.
+
+### 출력 형식
+
+- CSV
+- 컬럼 순서: `schedule_id,seat_number,status,price,held_at`
+- `AVAILABLE` 좌석은 `held_at`를 비운다.
