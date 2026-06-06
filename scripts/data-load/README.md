@@ -56,6 +56,17 @@
 - 대상 테이블: `seat`
 - 대상 컬럼: `schedule_id, seat_number, status, price, held_at`
 
+## 참조 데이터
+
+`setup-reference-data.sql`은 `seat` 적재 전에 필요한 `performance`, `schedule` 참조 데이터를 준비한다. `seat.schedule_id`는 외래 키 제약을 가지므로, 측정 전에 이 파일을 먼저 실행한다.
+
+### 실행 순서
+
+1. `setup-reference-data.sql` 실행
+2. `generate-seat-data.sh`로 CSV 생성
+3. `load-seat-data.sh`로 `seat` 데이터 적재
+4. `queries/*.sql`로 EXPLAIN 확인
+
 ## 조회 쿼리
 
 `queries/` 디렉터리는 EXPLAIN과 실행 시간 측정에 사용할 조회 쿼리를 정리한다. 각 SQL 파일은 측정 목적과 파라미터 기준을 파일 상단 주석에 둔다.

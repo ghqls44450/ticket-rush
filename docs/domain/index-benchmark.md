@@ -56,9 +56,35 @@ ORDER BY held_at ASC, id ASC;
 ## 측정 순서
 
 1. 더미 데이터 규모와 적재 방식을 고정한다.
-2. 적재 명령과 소요 시간을 기록한다.
-3. 주요 조회 쿼리의 EXPLAIN 결과를 기록한다.
-4. 인덱스 유지 상태와 비교 기준을 함께 남긴다.
+2. `setup-reference-data.sql`로 참조 데이터를 준비한다.
+3. 적재 명령과 소요 시간을 기록한다.
+4. 주요 조회 쿼리의 EXPLAIN 결과를 기록한다.
+5. 인덱스 유지 상태와 비교 기준을 함께 남긴다.
+
+## 실행 기준
+
+### 참조 데이터 준비
+
+```sql
+SOURCE scripts/data-load/setup-reference-data.sql;
+```
+
+### CSV 생성
+
+```bash
+./scripts/data-load/generate-seat-data.sh \
+  ./scripts/data-load/output/seat-data-10k.csv \
+  10000 \
+  1 \
+  50
+```
+
+### CSV 적재
+
+```bash
+./scripts/data-load/load-seat-data.sh \
+  ./scripts/data-load/output/seat-data-10k.csv
+```
 
 ## 기록 형식
 
@@ -66,6 +92,7 @@ ORDER BY held_at ASC, id ASC;
 
 - 데이터 규모:
 - 적재 방식:
+- 참조 데이터 준비 명령:
 - 실행 명령:
 - EXPLAIN 결과 요약:
 - 실행 시간:
@@ -75,6 +102,7 @@ ORDER BY held_at ASC, id ASC;
 
 - 데이터 규모:
 - 적재 방식:
+- 참조 데이터 준비 명령:
 - 실행 명령:
 - EXPLAIN 결과 요약:
 - 실행 시간:
