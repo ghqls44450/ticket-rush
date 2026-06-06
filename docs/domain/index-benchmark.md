@@ -136,3 +136,27 @@ SOURCE scripts/data-load/setup-reference-data.sql;
   - 회차별 좌석 상태 조회는 회차당 좌석 수 영향이 커서 전체 데이터 증가에도 `rows` 변화가 제한적이었다.
   - 공연별 회차 조회는 `performance_id=1`에 연결된 회차 수 증가가 `rows=150`으로 반영됐다.
   - 만료 대상 좌석 조회는 `HELD` 범위 검색 특성상 데이터 증가에 따라 `rows=500`으로 증가했다.
+
+### 측정 3
+
+- 데이터 규모: `seat` 100000건, `schedule` 2000건
+- 적재 방식: DBeaver CSV import
+- 참조 데이터 준비 명령:
+  - `SET SESSION cte_max_recursion_depth = 3000`
+  - `setup-reference-data.sql` 실행
+- 실행 명령:
+  - `./scripts/data-load/generate-seat-data.sh ./scripts/data-load/output/seat-data-100k.csv 100000 1 50`
+  - `seat` 테이블 CSV import
+- EXPLAIN 결과 요약:
+  - 회차별 좌석 상태 조회: `key=idx_schedule_status`, `type=ref`, `rows=48`
+  - 공연별 회차 조회: `key=idx_performance_start`, `type=ref`, `rows=1500`
+  - 만료 대상 좌석 조회: `key=idx_status_held`, `type=range`, `rows=5000`
+- 실행 시간:
+  - CSV 생성 시간: 약 0.15초
+  - CSV 적재 시간: 약 5.28초
+- 해석:
+  - 회차별 좌석 상태 조회는 10만 건까지 확장해도 `idx_schedule_status`를 계속 사용했다.
+  - 회차별 좌석 상태 조회는 특정 회차의 좌석 수 영향이 커서 `rows=48` 수준을 유지했다.
+  - 공연별 회차 조회는 `idx_performance_start`를 계속 사용했고 `performance_id=1`에 연결된 회차 수 증가가 `rows=1500`으로 반영됐다.
+  - 만료 대상 좌석 조회는 `idx_status_held`를 계속 사용했고 `HELD` 범위 검색 특성상 `rows=5000`까지 증가했다.
+  - 10만 건 기준에서도 세 쿼리 모두 기대한 인덱스를 유지했다.

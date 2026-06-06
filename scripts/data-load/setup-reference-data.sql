@@ -5,7 +5,7 @@
 -- 1. ticket 데이터베이스 선택
 -- 2. 기존 측정 데이터 정리
 -- 3. 성능 측정용 performance, schedule 데이터 추가
--- 4. 1만 건 seat 적재를 받을 수 있도록 schedule 200건 기준으로 준비
+-- 4. 10만 건 seat 적재를 받을 수 있도록 schedule 2000건 기준으로 준비
 
 USE ticket;
 
@@ -14,6 +14,7 @@ DELETE FROM seat;
 DELETE FROM schedule;
 DELETE FROM performance;
 SET FOREIGN_KEY_CHECKS = 1;
+SET SESSION cte_max_recursion_depth = 3000;
 
 INSERT INTO performance (id, title, description, venue, total_seats)
 VALUES
@@ -26,12 +27,12 @@ WITH RECURSIVE seq AS (
     UNION ALL
     SELECT n + 1
     FROM seq
-    WHERE n < 200
+    WHERE n < 2000
 )
 SELECT
     n AS id,
     CASE
-        WHEN n <= 150 THEN 1
+        WHEN n <= 1500 THEN 1
         ELSE 2
     END AS performance_id,
     TIMESTAMPADD(DAY, n - 1, '2026-06-06 19:00:00') AS start_time,
