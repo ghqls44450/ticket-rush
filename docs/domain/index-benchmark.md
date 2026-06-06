@@ -104,8 +104,8 @@ SOURCE scripts/data-load/setup-reference-data.sql;
   - 공연별 회차 조회: `key=idx_performance_start`, `type=ref`, `rows=3`
   - 만료 대상 좌석 조회: `key=idx_status_held`, `type=range`, `rows=12`
 - 실행 시간:
-  - CSV 생성 시간: 기록 전
-  - CSV 적재 시간: 기록 전
+  - CSV 생성 시간: 약 0.04초
+  - CSV 적재 시간: 약 1.19초
 - 해석:
   - 회차별 좌석 상태 조회는 `idx_schedule_status`를 사용했다.
   - 공연별 회차 조회는 `idx_performance_start`를 사용했다.
