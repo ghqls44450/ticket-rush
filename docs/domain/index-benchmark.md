@@ -90,13 +90,26 @@ SOURCE scripts/data-load/setup-reference-data.sql;
 
 ### 측정 1
 
-- 데이터 규모:
-- 적재 방식:
+- 데이터 규모: `seat` 250건
+- 적재 방식: `LOAD DATA LOCAL INFILE`
 - 참조 데이터 준비 명령:
+  - `setup-reference-data.sql` 실행
 - 실행 명령:
+  - `./scripts/data-load/generate-seat-data.sh ./scripts/data-load/output/seat-data-250.csv 250 1 50`
+  - `seat` 테이블 CSV import
 - EXPLAIN 결과 요약:
+  - 회차별 좌석 상태 조회: `key=idx_schedule_status`, `type=ref`, `rows=48`
+  - 공연별 회차 조회: `key=idx_performance_start`, `type=ref`, `rows=3`
+  - 만료 대상 좌석 조회: `key=idx_status_held`, `type=range`, `rows=12`
 - 실행 시간:
+  - CSV 생성 시간: 기록 전
+  - CSV 적재 시간: 기록 전
 - 해석:
+  - 회차별 좌석 상태 조회는 `idx_schedule_status`를 사용했다.
+  - 공연별 회차 조회는 `idx_performance_start`를 사용했다.
+  - 만료 대상 좌석 조회는 `idx_status_held`를 사용했다.
+  - 250건 기준에서는 세 쿼리 모두 기대한 인덱스를 사용했다.
+  - 다음 측정에서는 참조 `schedule` 수를 함께 늘려 1만 건 이상으로 확장한다.
 
 ### 측정 2
 
