@@ -86,6 +86,8 @@ SOURCE scripts/data-load/setup-reference-data.sql;
   ./scripts/data-load/output/seat-data-10k.csv
 ```
 
+로컬 `mysql` 클라이언트가 없으면 DBeaver CSV import로 동일 데이터를 적재한다.
+
 ## 기록 형식
 
 ### 측정 1
@@ -113,10 +115,24 @@ SOURCE scripts/data-load/setup-reference-data.sql;
 
 ### 측정 2
 
-- 데이터 규모:
-- 적재 방식:
+- 데이터 규모: `seat` 10000건, `schedule` 200건
+- 적재 방식: DBeaver CSV import
 - 참조 데이터 준비 명령:
+  - `setup-reference-data.sql` 실행
 - 실행 명령:
+  - `./scripts/data-load/generate-seat-data.sh ./scripts/data-load/output/seat-data-10k.csv 10000 1 50`
+  - `seat` 테이블 CSV import
 - EXPLAIN 결과 요약:
+  - 회차별 좌석 상태 조회: `key=idx_schedule_status`, `type=ref`, `rows=48`
+  - 공연별 회차 조회: `key=idx_performance_start`, `type=ref`, `rows=150`
+  - 만료 대상 좌석 조회: `key=idx_status_held`, `type=range`, `rows=500`
 - 실행 시간:
+  - CSV 생성 시간: 기록 전
+  - CSV 적재 시간: 기록 전
 - 해석:
+  - 회차별 좌석 상태 조회는 `idx_schedule_status`를 계속 사용했다.
+  - 공연별 회차 조회는 `idx_performance_start`를 계속 사용했다.
+  - 만료 대상 좌석 조회는 `idx_status_held`를 계속 사용했다.
+  - 회차별 좌석 상태 조회는 회차당 좌석 수 영향이 커서 전체 데이터 증가에도 `rows` 변화가 제한적이었다.
+  - 공연별 회차 조회는 `performance_id=1`에 연결된 회차 수 증가가 `rows=150`으로 반영됐다.
+  - 만료 대상 좌석 조회는 `HELD` 범위 검색 특성상 데이터 증가에 따라 `rows=500`으로 증가했다.

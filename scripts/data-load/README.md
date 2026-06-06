@@ -55,6 +55,7 @@
 - `LOAD DATA LOCAL INFILE`
 - 대상 테이블: `seat`
 - 대상 컬럼: `schedule_id, seat_number, status, price, held_at`
+- 로컬 `mysql` 클라이언트가 없으면 DBeaver CSV import로 대체할 수 있다.
 
 ## 참조 데이터
 
@@ -64,7 +65,7 @@
 
 1. `setup-reference-data.sql` 실행
 2. `generate-seat-data.sh`로 CSV 생성
-3. `load-seat-data.sh`로 `seat` 데이터 적재
+3. `load-seat-data.sh` 또는 DBeaver CSV import로 `seat` 데이터 적재
 4. `queries/*.sql`로 EXPLAIN 확인
 
 ## 조회 쿼리

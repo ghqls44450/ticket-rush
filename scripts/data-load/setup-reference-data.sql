@@ -5,6 +5,7 @@
 -- 1. ticket 데이터베이스 선택
 -- 2. 기존 측정 데이터 정리
 -- 3. 성능 측정용 performance, schedule 데이터 추가
+-- 4. 1만 건 seat 적재를 받을 수 있도록 schedule 200건 기준으로 준비
 
 USE ticket;
 
@@ -20,9 +21,20 @@ VALUES
     (2, 'Index Benchmark Performance 2', 'schedule(performance_id, start_time) 측정용 공연', 'Benchmark Hall B', 500000);
 
 INSERT INTO schedule (id, performance_id, start_time, end_time, status)
-VALUES
-    (1, 1, '2026-06-06 19:00:00', '2026-06-06 21:30:00', 'OPEN'),
-    (2, 1, '2026-06-07 19:00:00', '2026-06-07 21:30:00', 'OPEN'),
-    (3, 1, '2026-06-08 19:00:00', '2026-06-08 21:30:00', 'OPEN'),
-    (4, 2, '2026-06-09 19:00:00', '2026-06-09 21:30:00', 'OPEN'),
-    (5, 2, '2026-06-10 19:00:00', '2026-06-10 21:30:00', 'OPEN');
+WITH RECURSIVE seq AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1
+    FROM seq
+    WHERE n < 200
+)
+SELECT
+    n AS id,
+    CASE
+        WHEN n <= 150 THEN 1
+        ELSE 2
+    END AS performance_id,
+    TIMESTAMPADD(DAY, n - 1, '2026-06-06 19:00:00') AS start_time,
+    TIMESTAMPADD(DAY, n - 1, '2026-06-06 21:30:00') AS end_time,
+    'OPEN' AS status
+FROM seq;
