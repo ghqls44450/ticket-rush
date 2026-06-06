@@ -45,3 +45,13 @@
 - CSV
 - 컬럼 순서: `schedule_id,seat_number,status,price,held_at`
 - `AVAILABLE` 좌석은 `held_at`를 비운다.
+
+## 적재 스크립트
+
+`load-seat-data.sh`는 생성한 CSV를 MySQL `seat` 테이블에 적재한다. 세부 실행 방법과 환경 변수 기준은 스크립트 파일 상단 주석을 기준으로 확인한다.
+
+### 적재 방식
+
+- `LOAD DATA LOCAL INFILE`
+- 대상 테이블: `seat`
+- 대상 컬럼: `schedule_id, seat_number, status, price, held_at`
