@@ -55,3 +55,13 @@
 - `LOAD DATA LOCAL INFILE`
 - 대상 테이블: `seat`
 - 대상 컬럼: `schedule_id, seat_number, status, price, held_at`
+
+## 조회 쿼리
+
+`queries/` 디렉터리는 EXPLAIN과 실행 시간 측정에 사용할 조회 쿼리를 정리한다. 각 SQL 파일은 측정 목적과 파라미터 기준을 파일 상단 주석에 둔다.
+
+### 대상 쿼리
+
+- `seat-by-schedule-status.sql`: 회차별 좌석 상태 조회
+- `schedule-by-performance.sql`: 공연별 회차 조회
+- `expired-held-seats.sql`: 만료 대상 좌석 조회
